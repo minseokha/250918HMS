@@ -1,4 +1,3 @@
-
 // p5.js만으로 구현한 벽돌깨기 게임
 let ballX, ballY, ballDX, ballDY, ballR;
 let paddleX, paddleW, paddleH;
