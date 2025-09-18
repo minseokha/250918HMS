@@ -1,159 +1,175 @@
 
+// p5.js만으로 구현한 벽돌깨기 게임
+let ballX, ballY, ballDX, ballDY, ballR;
+let paddleX, paddleW, paddleH;
+let bricks;
+let rows = 5;
+let cols = 8;
+let brickW = 60;
+let brickH = 20;
+let brickPadding = 8;
+let brickOffsetTop = 40;
+let brickOffsetLeft = 35;
+let score = 0;
+let gameOver = false;
+let win = false;
+
 function setup() {
-  createCanvas(windowWidth, windowHeight * 0.7);
-  paddle = new Paddle();
-  ball = new Ball();
-  brickW = width / cols;
-  brickH = 30;
+  createCanvas(600, 400);
+  ballR = 10;
+  ballX = width / 2;
+  ballY = height - 50;
+  ballDX = 4;
+  ballDY = -4;
+  paddleW = 100;
+  paddleH = 15;
+  paddleX = width / 2 - paddleW / 2;
+  score = 0;
+  gameOver = false;
+  win = false;
   bricks = [];
   for (let r = 0; r < rows; r++) {
+    bricks[r] = [];
     for (let c = 0; c < cols; c++) {
-      bricks.push(new Brick(c * brickW, r * brickH + 40, brickW, brickH));
+      bricks[r][c] = true;
     }
   }
 }
 
 function draw() {
-  background(30, 30, 50);
-  if (gameOver) {
-    textAlign(CENTER, CENTER);
-    textSize(40);
-    fill(255, 0, 0);
-    text('Game Over!', width/2, height/2);
-    return;
-  }
-  if (win) {
-    textAlign(CENTER, CENTER);
-    textSize(40);
-    fill(0, 255, 0);
+  background(30);
+  drawBricks();
+  drawBall();
+  drawPaddle();
+  drawScore();
+  if (!gameOver && !win) {
+    moveBall();
+    movePaddle();
+    checkCollisions();
+  } else if (gameOver) {
+    textSize(32);
+    fill(255,0,0);
+    textAlign(CENTER);
+    text('Game Over', width/2, height/2);
+    textSize(20);
+    fill(255);
+    text('Score: ' + score, width/2, height/2+40);
+    text('Press SPACE to restart', width/2, height/2+70);
+  } else if (win) {
+    textSize(32);
+    fill(0,255,0);
+    textAlign(CENTER);
     text('You Win!', width/2, height/2);
-    return;
+    textSize(20);
+    fill(255);
+    text('Score: ' + score, width/2, height/2+40);
+    text('Press SPACE to restart', width/2, height/2+70);
   }
-  paddle.show();
-  ball.update();
-  ball.show();
-  ball.checkPaddle(paddle);
-  let remaining = 0;
-  for (let b of bricks) {
-    if (!b.broken) {
-      b.show();
-      if (ball.checkBrick(b)) {
-        b.broken = true;
-      } else {
-        remaining++;
+}
+
+function drawBall() {
+  fill(255, 200, 0);
+  ellipse(ballX, ballY, ballR * 2);
+}
+
+function drawPaddle() {
+  fill(0, 200, 255);
+  rect(paddleX, height - paddleH - 10, paddleW, paddleH, 8);
+}
+
+function drawBricks() {
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (bricks[r][c]) {
+        fill(100 + r*30, 50 + c*20, 200);
+        let x = c * (brickW + brickPadding) + brickOffsetLeft;
+        let y = r * (brickH + brickPadding) + brickOffsetTop;
+        rect(x, y, brickW, brickH, 5);
       }
     }
   }
-  if (remaining === 0) win = true;
-// ...existing code...
-
-function touchMoved() {
-  paddle.x = constrain(mouseX, 0, width - paddle.w);
-  return false;
 }
 
-function mouseDragged() {
-  paddle.x = constrain(mouseX, 0, width - paddle.w);
+function drawScore() {
+  textSize(18);
+  fill(255);
+  textAlign(LEFT);
+  text('Score: ' + score, 10, 25);
 }
 
-class Paddle {
-  constructor() {
-    this.w = width / 5;
-    this.h = 18;
-    this.x = width/2 - this.w/2;
-    this.y = height - 40;
+function moveBall() {
+  ballX += ballDX;
+  ballY += ballDY;
+  // 좌우 벽 충돌
+  if (ballX < ballR || ballX > width - ballR) {
+    ballDX *= -1;
   }
-  show() {
-    fill(200);
-    rect(this.x, this.y, this.w, this.h, 10);
+  // 위쪽 벽 충돌
+  if (ballY < ballR) {
+    ballDY *= -1;
   }
-}
-
-class Ball {
-  constructor() {
-    this.r = 15;
-    this.x = width/2;
-    this.y = height/2;
-    this.speed = min(width, height) / 80;
-    this.vx = random([-1, 1]) * this.speed;
-    this.vy = -this.speed;
+  // 패들 충돌
+  let paddleY = height - paddleH - 10;
+  if (
+    ballY + ballR > paddleY &&
+    ballY + ballR < paddleY + paddleH &&
+    ballX > paddleX &&
+    ballX < paddleX + paddleW
+  ) {
+    ballDY *= -1;
+    ballY = paddleY - ballR;
   }
-  update() {
-    this.x += this.vx;
-    this.y += this.vy;
-    // 벽 충돌
-    if (this.x < this.r || this.x > width - this.r) this.vx *= -1;
-    if (this.y < this.r) this.vy *= -1;
-    if (this.y > height - this.r) gameOver = true;
-  }
-  show() {
-    fill(255, 200, 0);
-    ellipse(this.x, this.y, this.r * 2);
-  }
-  checkPaddle(p) {
-    if (this.y + this.r > p.y && this.x > p.x && this.x < p.x + p.w && this.y < p.y + p.h) {
-      this.vy *= -1;
-      this.y = p.y - this.r;
-    }
-  }
-  checkBrick(b) {
-    if (b.broken) return false;
-    // 충돌 판정
-    let hit = this.x > b.x && this.x < b.x + b.w && this.y - this.r < b.y + b.h && this.y + this.r > b.y;
-    if (hit) {
-      this.vy *= -1;
-      return true;
-    }
-    return false;
+  // 바닥에 닿으면 게임 오버
+  if (ballY > height - ballR) {
+    gameOver = true;
   }
 }
 
-class Brick {
-  constructor(x, y, w, h) {
-    this.x = x;
-    this.y = y;
-    this.w = w - 4;
-    this.h = h - 4;
-    this.broken = false;
+function movePaddle() {
+  if (keyIsDown(LEFT_ARROW)) {
+    paddleX -= 7;
   }
-  show() {
-    fill(100, 180, 255);
-    rect(this.x, this.y, this.w, this.h, 6);
+  if (keyIsDown(RIGHT_ARROW)) {
+    paddleX += 7;
   }
+  paddleX = constrain(paddleX, 0, width - paddleW);
 }
 
-}
-
-function draw() {
-  background(30, 30, 50);
-  if (gameOver) {
-    textAlign(CENTER, CENTER);
-    textSize(40);
-    fill(255, 0, 0);
-    text('Game Over!', width/2, height/2);
-    return;
-  }
-  if (win) {
-    textAlign(CENTER, CENTER);
-    textSize(40);
-    fill(0, 255, 0);
-    text('You Win!', width/2, height/2);
-    return;
-  }
-  paddle.show();
-  ball.update();
-  ball.show();
-  ball.checkPaddle(paddle);
-  let remaining = 0;
-  for (let b of bricks) {
-    if (!b.broken) {
-      b.show();
-      if (ball.checkBrick(b)) {
-        b.broken = true;
-      } else {
-        remaining++;
+function checkCollisions() {
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (bricks[r][c]) {
+        let x = c * (brickW + brickPadding) + brickOffsetLeft;
+        let y = r * (brickH + brickPadding) + brickOffsetTop;
+        if (
+          ballX > x &&
+          ballX < x + brickW &&
+          ballY - ballR < y + brickH &&
+          ballY + ballR > y
+        ) {
+          ballDY *= -1;
+          bricks[r][c] = false;
+          score += 10;
+          if (isWin()) {
+            win = true;
+          }
+        }
       }
     }
   }
-  if (remaining === 0) win = true;
+}
+
+function isWin() {
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (bricks[r][c]) return false;
+    }
+  }
+  return true;
+}
+
+function keyPressed() {
+  if ((gameOver || win) && key === ' ') {
+    setup();
+  }
 }
