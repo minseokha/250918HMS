@@ -1,3 +1,4 @@
+
 function setup() {
   createCanvas(windowWidth, windowHeight * 0.7);
   paddle = new Paddle();
