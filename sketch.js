@@ -14,9 +14,10 @@ let gameOver = false;
 let win = false;
 let canvasW, canvasH;
 
+
 function setup() {
-  canvasW = min(windowWidth, 600);
-  canvasH = min(windowHeight * 0.7, 500);
+  canvasW = windowWidth;
+  canvasH = windowHeight * 0.7;
   createCanvas(canvasW, canvasH);
   // 캔버스 크기에 따라 요소 크기 조정
   ballR = canvasW * 0.018;
@@ -42,6 +43,7 @@ function setup() {
       bricks[r][c] = true;
     }
   }
+}
 
 function draw() {
   background(255,255,0);
@@ -72,6 +74,7 @@ function draw() {
     text('Score: ' + score, width/2, height/2+40);
     text('Press SPACE to restart', width/2, height/2+70);
   }
+}
 
 function drawBall() {
   fill(255, 200, 0);
@@ -103,6 +106,7 @@ function drawScore() {
   text('Score: ' + score, 10, 25);
 }
 
+function moveBall() {
   ballX += ballDX;
   ballY += ballDY;
   // 좌우 벽 충돌
@@ -130,6 +134,7 @@ function drawScore() {
   }
 }
 
+function movePaddle() {
   let moveSpeed = canvasW * 0.025;
   if (keyIsDown(LEFT_ARROW)) {
     paddleX -= moveSpeed;
@@ -139,7 +144,9 @@ function drawScore() {
   }
   paddleX = constrain(paddleX, 0, width - paddleW);
 }
+
 function windowResized() {
+  resizeCanvas(windowWidth, windowHeight * 0.7);
   setup();
 }
 
