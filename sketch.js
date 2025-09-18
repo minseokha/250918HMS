@@ -1,31 +1,40 @@
 // p5.js만으로 구현한 벽돌깨기 게임
+
 let ballX, ballY, ballDX, ballDY, ballR;
 let paddleX, paddleW, paddleH;
 let bricks;
 let rows = 5;
 let cols = 8;
-let brickW = 60;
-let brickH = 20;
-let brickPadding = 8;
-let brickOffsetTop = 40;
-let brickOffsetLeft = 35;
+let brickW, brickH;
+let brickPadding;
+let brickOffsetTop;
+let brickOffsetLeft;
 let score = 0;
 let gameOver = false;
 let win = false;
+let canvasW, canvasH;
 
 function setup() {
-  createCanvas(600, 400);
-  ballR = 10;
+  canvasW = min(windowWidth, 600);
+  canvasH = min(windowHeight * 0.7, 500);
+  createCanvas(canvasW, canvasH);
+  // 캔버스 크기에 따라 요소 크기 조정
+  ballR = canvasW * 0.018;
   ballX = width / 2;
-  ballY = height - 50;
-  ballDX = 4;
-  ballDY = -4;
-  paddleW = 100;
-  paddleH = 15;
+  ballY = height - canvasH * 0.13;
+  ballDX = canvasW * 0.012;
+  ballDY = -canvasH * 0.012;
+  paddleW = canvasW * 0.18;
+  paddleH = canvasH * 0.04;
   paddleX = width / 2 - paddleW / 2;
   score = 0;
   gameOver = false;
   win = false;
+  brickW = (canvasW - 2 * canvasW * 0.06 - (cols - 1) * canvasW * 0.013) / cols;
+  brickH = canvasH * 0.045;
+  brickPadding = canvasW * 0.013;
+  brickOffsetTop = canvasH * 0.09;
+  brickOffsetLeft = canvasW * 0.06;
   bricks = [];
   for (let r = 0; r < rows; r++) {
     bricks[r] = [];
@@ -33,7 +42,6 @@ function setup() {
       bricks[r][c] = true;
     }
   }
-}
 
 function draw() {
   background(255,255,0);
@@ -64,7 +72,6 @@ function draw() {
     text('Score: ' + score, width/2, height/2+40);
     text('Press SPACE to restart', width/2, height/2+70);
   }
-}
 
 function drawBall() {
   fill(255, 200, 0);
@@ -73,7 +80,7 @@ function drawBall() {
 
 function drawPaddle() {
   fill(0, 200, 255);
-  rect(paddleX, height - paddleH - 10, paddleW, paddleH, 8);
+  rect(paddleX, height - paddleH - canvasH * 0.025, paddleW, paddleH, 8);
 }
 
 function drawBricks() {
@@ -96,7 +103,6 @@ function drawScore() {
   text('Score: ' + score, 10, 25);
 }
 
-function moveBall() {
   ballX += ballDX;
   ballY += ballDY;
   // 좌우 벽 충돌
@@ -108,7 +114,7 @@ function moveBall() {
     ballDY *= -1;
   }
   // 패들 충돌
-  let paddleY = height - paddleH - 10;
+  let paddleY = height - paddleH - canvasH * 0.025;
   if (
     ballY + ballR > paddleY &&
     ballY + ballR < paddleY + paddleH &&
@@ -124,14 +130,17 @@ function moveBall() {
   }
 }
 
-function movePaddle() {
+  let moveSpeed = canvasW * 0.025;
   if (keyIsDown(LEFT_ARROW)) {
-    paddleX -= 7;
+    paddleX -= moveSpeed;
   }
   if (keyIsDown(RIGHT_ARROW)) {
-    paddleX += 7;
+    paddleX += moveSpeed;
   }
   paddleX = constrain(paddleX, 0, width - paddleW);
+}
+function windowResized() {
+  setup();
 }
 
 function checkCollisions() {
