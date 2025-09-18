@@ -36,7 +36,7 @@ function setup() {
 }
 
 function draw() {
-  background(30);
+  background(255,255,0);
   drawBricks();
   drawBall();
   drawPaddle();
